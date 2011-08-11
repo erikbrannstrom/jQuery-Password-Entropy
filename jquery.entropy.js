@@ -77,8 +77,10 @@
 
         // Recursively merge user options with default settings and fix array merge
         var settings = $.extend({}, defaults, options);
-        if(options)
+        if(options) {
             settings.functions = defaults.functions.concat(options.functions);
+            settings.blacklist = defaults.blacklist.concat(options.blacklist);
+        }
 
         return this.each(function() {
 
