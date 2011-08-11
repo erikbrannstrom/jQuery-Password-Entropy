@@ -13,7 +13,7 @@
 *
 * The default blacklisted passwords are based on lists downloaded from
 * http://www.skullsecurity.org/ and then compiled to match the purpose of this
-* plugin.
+* plug-in.
 *
 * MIT LICENSE
 * Copyright (C) 2011 by Erik Brännström
@@ -55,9 +55,9 @@
                     //  - only letters followed by a single special character
                     if( password.match(/^[a-zA-Z]+[0-9]{1,3}$/)
                     ||  password.match(/^[A-Z][a-z]+$/)
-                    ||  password.match(/^[a-zA-Z]+[^a-zA-Z0-9]$/) ) {
+                    ||  password.match(/^[a-zA-Z]+[^a-zA-Z0-9]$/) )
                         return entropy - 8;
-                    }else
+                    else
                         return entropy;
                 },
                 function(entropy, password) {
