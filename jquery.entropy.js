@@ -98,7 +98,7 @@
                 if(psw.match(/[\._!\- @*#\/&]/)) // Most common special characters based on RockYou passwords
                     set += 10;
                 if(psw.match(/[^a-zA-Z0-9\._!\- @*#\/&]/))
-                    set += 22;
+                    set += 23;
 
                 // Calculate entropy in base 2
                 var combinations = Math.pow(set, psw.length);
