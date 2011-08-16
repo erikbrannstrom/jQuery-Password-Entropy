@@ -66,6 +66,16 @@
                         return entropy;
                     
                     return log2(settings.blacklist.length);
+                },
+                function(entropy, password) {
+                    // Decrease entropy when password contains repeated characters
+                    var repeats = 0;
+                    for (var i = 0; i < password.length-1; i++) {
+                        if (password.charAt(i) === password.charAt(i+1)) {
+                            repeats += 1;
+                        }
+                    }
+                    return entropy - repeats*3;
                 }
             ],
             'strings'   : ['Very weak', 'Weak', 'Pass', 'Strong', 'Very strong', 'Super strong'],
