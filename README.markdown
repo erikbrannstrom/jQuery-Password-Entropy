@@ -13,7 +13,8 @@ reading for those interested.
 
 The default blacklisted passwords are based on lists downloaded from
 http://www.skullsecurity.org/ and then compiled to match the purpose of this
-plug-in.
+plug-in. Only passwords with eight characters or more were kept in the list 
+to save space, since my password policy doesn't allow anything shorter anyway.
 
 Created by Erik Brännström.
 
