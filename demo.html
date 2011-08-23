@@ -16,7 +16,15 @@
               $('.strength-indicator .indicator').css('background-color', is_good ? 'green' : 'red');
               return is_good;
               }, function(){ return "Use a stronger password" });
-            $('form').validate({replaceableClass: 'replaceable',
+            $('form').validate({
+              replaceableClass: 'replaceable',
+              messages:{
+                password:{
+                  success: function(){
+                    return "Awesome password!";
+                  }
+                }
+              },
               onkeyup: function(element){
                 // Instant feedback.
                 this.element(element);
@@ -66,7 +74,8 @@
 
     <h1>Entropy test for jQuery.Validation</h1>
     <form>
-      <label class="replaceable">Your Password</label>
+      
+      <label class="replaceable" for="validation">Your Password</label>
       <div class="wrapper">
         <input class="entropy" entropy="80" name="password" type="password" id="validation" />
         <div class="strength-indicator"><div class="indicator"></div></div>
