@@ -3,17 +3,74 @@
     <title>jQuery Password Entropy</title>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script src="jquery.entropy.js" type="text/javascript"></script>
+    <script src="jquery.validation.js" type="text/javascript"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            $('input[type=password]').passwordEntropy();
+            $('input#standalone').passwordEntropy();
+            jQuery.validator.addMethod("entropy", function(value, element, params) {
+              var entropy = $.entropyTestFactory()(value);
+              var is_good = ($.entropyTestFactory()(value) > params);
+              entropy = Math.min(entropy, 100);
+              entropy = Math.max(entropy, 5);
+              $('.strength-indicator .indicator').width(entropy+'%');
+              $('.strength-indicator .indicator').css('background-color', is_good ? 'green' : 'red');
+              return is_good;
+              }, function(){ return "Use a stronger password" });
+            $('form').validate({replaceableClass: 'replaceable',
+              onkeyup: function(element){
+                // Instant feedback.
+                this.element(element);
+            }});
+            
         });
     </script>
+
+    <style>
+      input{
+        font-size: 18px;
+        padding: 0.2em;
+        border-radius: 0.5em;
+        border: 1px solid #bbb; 
+        width: 300px;
+      }
+      .wrapper{
+        position: relative;
+        width: 300px;
+      }
+      label{
+        clear: both;
+      }
+      .strength-indicator{
+        position: absolute;
+        top: 12px;
+        right: 10px;
+        width: 40px;
+        height: 6px;
+        border: 1px solid #bbb;
+        border-radius: 3px;
+      }
+      .strength-indicator .indicator{
+        background-color: red;
+        width: 10%;
+        height: 4px;
+        margin: 1px;
+        border-radius: 3px;
+        -webkit-transition: width 0.5s linear;
+      }
+    </style>
 </head>
 <body>
-
     <h1>jQuery Password Entropy</h1>
-    <input type="password" />
+    <input type="password" id="standalone"/>
     <div class="strength"></div>
 
+    <h1>Entropy test for jQuery.Validation</h1>
+    <form>
+      <label class="replaceable">Your Password</label>
+      <div class="wrapper">
+        <input class="entropy" entropy="80" name="password" type="password" id="validation" />
+        <div class="strength-indicator"><div class="indicator"></div></div>
+      </div>
+    </form>
 </body>
 </html>

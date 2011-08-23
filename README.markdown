@@ -26,17 +26,27 @@ Options
 - functions     : Array of functions that receive the current entropy and password.
                   Must return a value that will replace the current value.
                   Options are merged with defaults.
-- strings       : Array with six elements, setting the result string.
-- classes       : Array with six elements, setting the class of the display element
-                  based on the strength.
+- thresholds    : Array with thresholds counts, defining cutoffs for
+                  each class
+- strings       : Array with same length as thresholds, setting the result string.
+- classes       : Array with same length as thresholds, setting the class of the 
+                  display element based on the strength.
 - blacklist     : Array containing blacklisted words that should not be used as
                   passwords. Options are merged with defaults.
 
-Example
+
+
+Examples
 -------
-`$('input[type=password]').passwordEntropy({
-    'display' : 'div.result'
-});`
+
+    $('input[type=password]').passwordEntropy({
+      'display' : 'div.result'
+    });
+
+    // Standalone usage
+    var tester = $.entropyTestFactory();
+    alert('Foobar123 has an entropy of '+tester('Foobar123'));
+
 
 License
 -------
