@@ -137,17 +137,12 @@
             var entropy = entropyTester(psw);
              // Set message display
             var res = 0;
-            if(entropy >= settings.thresholds[5])
-                res = 5;
-            else if(entropy >= settings.thresholds[4])
-                res = 4;
-            else if(entropy >= settings.thresholds[3])
-                res = 3;
-            else if(entropy >= settings.thresholds[2])
-                res = 2;
-            else if(entropy >= settings.thresholds[1])
-                res = 1;
-            console.log(entropy);
+            for(var i = (settings.thresholds.length - 1); i>=0; i--){
+              if(entropy >= settings.thresholds[i]){
+                res = i;
+                break;
+              }
+            }
             
             // Display results
             $(settings.display).removeClass(settings.classes.join(' '))
