@@ -44,7 +44,6 @@
       };
 
       var defaults = {
-          'thresholds': [ 0, 36, 42, 52, 60, 70],
           'functions'    : [
               function(entropy, password) {
                   // Penalize passwords with:
@@ -112,20 +111,7 @@
             entropy = settings.functions[i](entropy, psw);
         }
         
-        // Set message display
-        var res = 0;
-        if(entropy >= settings.thresholds[5])
-            res = 5;
-        else if(entropy >= settings.thresholds[4])
-            res = 4;
-        else if(entropy >= settings.thresholds[3])
-            res = 3;
-        else if(entropy >= settings.thresholds[2])
-            res = 2;
-        else if(entropy >= settings.thresholds[1])
-            res = 1;
-        console.log(entropy);
-        return res;
+        return entropy;
       }
     }
     $.fn.passwordEntropy = function(options) {
@@ -135,6 +121,7 @@
         blacklist: [],
         strings:   ['Very weak', 'Weak', 'Pass', 'Strong', 'Very strong', 'Super strong'],
         classes:   ['very-weak', 'weak', 'pass', 'strong', 'very-strong', 'super-strong'],
+        thresholds: [ 0, 36, 42, 52, 60, 70],
       }
       var settings = $.extend({}, defaults, options);
       if(options) {
@@ -147,12 +134,25 @@
       return this.each(function() {
         $(this).bind('keyup', function() {
             var psw = $(this).val();
-            var results = entropyTester(psw);
+            var entropy = entropyTester(psw);
+             // Set message display
+            var res = 0;
+            if(entropy >= settings.thresholds[5])
+                res = 5;
+            else if(entropy >= settings.thresholds[4])
+                res = 4;
+            else if(entropy >= settings.thresholds[3])
+                res = 3;
+            else if(entropy >= settings.thresholds[2])
+                res = 2;
+            else if(entropy >= settings.thresholds[1])
+                res = 1;
+            console.log(entropy);
             
             // Display results
             $(settings.display).removeClass(settings.classes.join(' '))
-                    .addClass(settings.classes[results])
-                    .html(settings.strings[results]);
+                    .addClass(settings.classes[res])
+                    .html(settings.strings[res]);
         });
 
       });
