@@ -55,18 +55,11 @@ Examples
 Usage with [jquery.validation.js](https://github.com/jzaefferer/jquery-validation)
 
 
+    var tester = $.entropyTestFactory();
     jQuery.validator.addMethod("entropy", function(value, element, params) {
-      var entropy = entropytester.test(value);
-      var is_good = (entropy > params);
-      entropy = Math.min(entropy, 100);
-      entropy = Math.max(entropy, 5);
-      $('.strength-indicator .indicator').width(entropy+'%');
-      $('.strength-indicator .indicator').css('background-color', is_good ? 'green' : 'red');
-      return is_good;
+      return (tester.test(value) > params);
       }, function(){ return "Please use a stronger password" });
     $('form').validate({
-      replaceableClass: 'replaceable',
-      allowValid: true,
       onkeyup: function(element){
         // Instant feedback.
         this.element(element);
@@ -74,7 +67,7 @@ Usage with [jquery.validation.js](https://github.com/jzaefferer/jquery-validatio
     });
 
 Demo uses a modified fork of jquery validation to echo out additional
-strength classifications: 
+strength classifications and do a pretty strength indicator:
 
 https://github.com/therabidbanana/jquery-validation
 
