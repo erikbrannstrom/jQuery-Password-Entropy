@@ -18,6 +18,7 @@ to save space, since my password policy doesn't allow anything shorter anyway.
 
 Created by Erik Brännström.
 
+Refactored by David Haslem to allow integration with jquery.validation
 
 Options
 -------
@@ -27,7 +28,7 @@ Options
                   Must return a value that will replace the current value.
                   Options are merged with defaults.
 - thresholds    : Array with thresholds counts, defining cutoffs for
-                  each class
+                  each classification
 - strings       : Array with same length as thresholds, setting the result string.
 - classes       : Array with same length as thresholds, setting the class of the 
                   display element based on the strength.
@@ -45,7 +46,37 @@ Examples
 
     // Standalone usage
     var tester = $.entropyTestFactory();
-    alert('Foobar123 has an entropy of '+tester('Foobar123'));
+    var entropy = tester.test('Foobar123');
+    var classification = tester.classify(entropy);
+    alert('Foobar123 has an entropy of '+entropy+' which is level '+classification);
+    alert('Classification is '+tester.messageForClass(classification));
+
+
+Usage with [jquery.validation.js](https://github.com/jzaefferer/jquery-validation)
+
+
+    jQuery.validator.addMethod("entropy", function(value, element, params) {
+      var entropy = entropytester.test(value);
+      var is_good = (entropy > params);
+      entropy = Math.min(entropy, 100);
+      entropy = Math.max(entropy, 5);
+      $('.strength-indicator .indicator').width(entropy+'%');
+      $('.strength-indicator .indicator').css('background-color', is_good ? 'green' : 'red');
+      return is_good;
+      }, function(){ return "Please use a stronger password" });
+    $('form').validate({
+      replaceableClass: 'replaceable',
+      allowValid: true,
+      onkeyup: function(element){
+        // Instant feedback.
+        this.element(element);
+      }
+    });
+
+Demo uses a modified fork of jquery validation to echo out additional
+strength classifications: 
+
+https://github.com/therabidbanana/jquery-validation
 
 
 License

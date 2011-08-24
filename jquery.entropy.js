@@ -44,7 +44,10 @@
       };
 
       var defaults = {
-          'functions'    : [
+          strings:   ['Useless', 'Weak', 'OK', 'Good', 'Strong', 'Very Strong'],
+          classes:   ['useless', 'weak', 'ok', 'good', 'strong', 'very-strong'],
+          thresholds: [ 0, 36, 42, 52, 60, 70],
+          functions : [
               function(entropy, password) {
                   // Penalize passwords with:
                   //  - only letters followed by 1 to 3 digits
@@ -75,6 +78,58 @@
                   return entropy - repeats*3;
               }
           ],
+          baseEntropy: function(psw, username){
+            // Decide the number of characters in the character set
+            var set = 0;
+            if(psw.match(/[a-z]/))
+                set += 26;
+            if(psw.match(/[A-Z]/))
+                set += 26;
+            if(psw.match(/[0-9]/))
+                set += 10;
+            if(psw.match(/[\._!\- @*#\/&]/)) // Most common special characters based on RockYou passwords
+                set += 10;
+            if(psw.match(/[^a-zA-Z0-9\._!\- @*#\/&]/))
+                set += 23;
+
+            // Calculate entropy in base 2
+            var combinations = Math.pow(set, psw.length);
+            var entropy = log2(combinations);
+        
+            return entropy;
+          },
+          test: function(psw, username){
+            var entropy = this.baseEntropy(psw, username);
+            // Run functions to modify password entropy
+            for (var i in this.functions) {
+              if(!this.functions[i]) continue;
+              entropy = this.functions[i](entropy, psw);
+            }
+            return entropy;
+          },
+          level: function(entropy){
+            var res = 0;
+            for(var i = (this.thresholds.length - 1); i>=0; i--){
+              if(entropy >= this.thresholds[i]){
+                res = i;
+                break;
+              }
+            }
+            return res;
+          },
+          classify: function(entropy){
+            return this.classes[this.level(entropy)];
+          },
+          messageForClass: function(level){
+            return this.strings[level];
+          },
+          messageForTest: function(psw, username){
+            var entropy = this.test(psw, username);
+            var level = this.level(entropy);
+            
+            return this.messageForClass(level);
+          },
+          
           
           // Default blacklist contains 598 passwords that are at least 8 characters long.
           // Based on Twitter's disallowed passwords, John the Ripper dictionary and most common RockYou passwords.
@@ -87,69 +142,30 @@
       if(options) {
           settings.functions = defaults.functions.concat(options.functions);
           settings.blacklist = defaults.blacklist.concat(options.blacklist);
-      } 
-
-      return function(psw){
-        // Decide the number of characters in the character set
-        var set = 0;
-        if(psw.match(/[a-z]/))
-            set += 26;
-        if(psw.match(/[A-Z]/))
-            set += 26;
-        if(psw.match(/[0-9]/))
-            set += 10;
-        if(psw.match(/[\._!\- @*#\/&]/)) // Most common special characters based on RockYou passwords
-            set += 10;
-        if(psw.match(/[^a-zA-Z0-9\._!\- @*#\/&]/))
-            set += 23;
-
-        // Calculate entropy in base 2
-        var combinations = Math.pow(set, psw.length);
-        var entropy = log2(combinations);
-
-        // Run functions to modify password entropy
-        for (var i in settings.functions) {
-          if(!settings.functions[i]) continue;
-          entropy = settings.functions[i](entropy, psw);
-        }
-        
-        return entropy;
       }
+
+      return settings;
     }
     $.fn.passwordEntropy = function(options) {
       var defaults = {
         display:   '.strength',
-        functions: [],
-        blacklist: [],
-        strings:   ['Very weak', 'Weak', 'Pass', 'Strong', 'Very strong', 'Super strong'],
-        classes:   ['very-weak', 'weak', 'pass', 'strong', 'very-strong', 'super-strong'],
-        thresholds: [ 0, 36, 42, 52, 60, 70],
       }
       var settings = $.extend({}, defaults, options);
-      if(options) {
-          settings.functions = defaults.functions.concat(options.functions);
-          settings.blacklist = defaults.blacklist.concat(options.blacklist);
-      }
+      
       // Create an entropy test function with options passed to plugin
-      var entropyTester = $.entropyTestFactory(settings);
+      var entropyTester = $.entropyTestFactory(options);
 
       return this.each(function() {
         $(this).bind('keyup', function() {
             var psw = $(this).val();
-            var entropy = entropyTester(psw);
+            var entropy = entropyTester.test(psw);
              // Set message display
-            var res = 0;
-            for(var i = (settings.thresholds.length - 1); i>=0; i--){
-              if(entropy >= settings.thresholds[i]){
-                res = i;
-                break;
-              }
-            }
             
+            var classification = entropyTester.level(entropy);
             // Display results
-            $(settings.display).removeClass(settings.classes.join(' '))
-                    .addClass(settings.classes[res])
-                    .html(settings.strings[res]);
+            $(settings.display).removeClass(entropyTester.classes.join(' '))
+                    .addClass(entropyTester.classes[classification])
+                    .html(entropyTester.messageForClass(classification));
         });
 
       });

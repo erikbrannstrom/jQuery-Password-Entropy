@@ -209,6 +209,7 @@ $.extend($.validator, {
 		validClass: "valid",
 		errorElement: "label",
 		focusInvalid: true,
+    // allowValid: true,
 		errorContainer: $( [] ),
 		errorLabelContainer: $( [] ),
 		onsubmit: true,
@@ -468,6 +469,16 @@ $.extend($.validator, {
 
 		errors: function(replaceable_class) {
       var errorTypes = this.settings.errorElement + "." + this.settings.errorClass;
+      if(this.settings.allowValid)
+        errorTypes = errorTypes +','+this.settings.errorElement + "." + this.settings.validClass;
+      if(replaceable_class)
+        errorTypes = errorTypes +','+this.settings.errorElement + "." + replaceable_class;
+			return $( errorTypes, this.errorContext );
+		},
+    valids: function(replaceable_class) {
+      var errorTypes = "";
+      if(this.settings.allowValid)
+        errorTypes = errorTypes +','+this.settings.errorElement + "." + this.settings.validClass;
       if(replaceable_class)
         errorTypes = errorTypes +','+this.settings.errorElement + "." + replaceable_class;
 			return $( errorTypes, this.errorContext );
@@ -516,6 +527,7 @@ $.extend($.validator, {
 					dependencyMismatch = false;
 
 					if ( result == "pending" ) {
+            this.toHide = this.toHide.not( this.validsFor(element) );
 						this.toHide = this.toHide.not( this.errorsFor(element) );
 						return;
 					}
@@ -532,16 +544,17 @@ $.extend($.validator, {
 			}
 			if (dependencyMismatch){
         var default_message = $(element).attr('validationdefault') || false;
-        var message = this.defaultMessage(element, 'default', default_message);
-        if(message)
+        var message = this.defaultFormattedMessage(element, 'default', {}, default_message);
+        if(message && message !== ""){
           this.showLabel(element, message, true);
+        }
         return;
       }
 			if ( this.objectLength(rules) ){
 
-        var message = this.defaultMessage(element, 'success', false);
+        var message = this.defaultFormattedMessage(element, 'valid', {}, false);
 
-        if(message){
+        if(message && message !== ""){
           this.successList.push({message: message, element: element});
           this.showLabel(element, message, true);
         }
@@ -572,6 +585,7 @@ $.extend($.validator, {
 				: m[method]);
 		},
 
+    
 		// return the first defined argument, allowing empty strings
 		findDefined: function() {
 			for(var i = 0; i < arguments.length; i++) {
@@ -582,9 +596,15 @@ $.extend($.validator, {
 		},
 
 		defaultMessage: function( element, method, true_default) {
-      var default_message = (true_default === undefined ? "<strong>Warning: No message defined for " + element.name + "</strong>" : true_default);
-      var title = !this.settings.ignoreTitle && element.title || undefined;
-      title = (true_default === undefined ? title : undefined);
+      // Setting true_default to false disables the warnings and element.title
+      // support and only allows the custome messages.
+      var default_message = (true_default === undefined )  
+                              ? "<strong>Warning: No message defined for " + element.name + "</strong>" 
+                                : true_default;
+      var title = (!this.settings.ignoreTitle) ? element.title : undefined;
+      title = (true_default === false ? undefined : title);
+      title = (title == "") ? undefined : title;
+      default_message = (true_default === false ) ? undefined : default_message;
 			return this.findDefined(
 				this.customMessage( element.name, method ),
 				this.customMetaMessage( element, method ),
@@ -595,14 +615,25 @@ $.extend($.validator, {
 			);
 		},
 
-		formatAndAdd: function( element, rule ) {
-			var message = this.defaultMessage( element, rule.method ),
+    // return the custom message for the given element name and validation method
+		defaultFormattedMessage: function( element, method, rule_params, true_default) {
+      var default_message = (true_default === undefined || true_default === null) ? undefined : true_default;
+      var message = this.defaultMessage( element, method, default_message),
 				theregex = /\$?\{(\d+)\}/g;
+      rule_params = rule_params || [];
 			if ( typeof message == "function" ) {
-				message = message.call(this, rule.parameters, element);
+				message = message.call(this, rule_params, element);
 			} else if (theregex.test(message)) {
-				message = jQuery.format(message.replace(theregex, '{$1}'), rule.parameters);
+        
+				message = jQuery.format(message.replace(theregex, '{$1}'), rule_params);
 			}
+
+      return message;
+		},
+
+
+		formatAndAdd: function( element, rule ) {
+			var message = this.defaultFormattedMessage( element, rule.method, rule.parameters );
 			this.errorList.push({
 				message: message,
 				element: element
@@ -627,7 +658,7 @@ $.extend($.validator, {
 			if( this.errorList.length ) {
 				this.toShow = this.toShow.add( this.containers );
 			}
-			if (this.settings.success) {
+			if (this.settings.success || this.settings.allowValid) {
 				for ( var i = 0; this.successList[i]; i++ ) {
 					this.showLabel( this.successList[i].element, this.successList[i].message, true );
 				}
@@ -663,7 +694,7 @@ $.extend($.validator, {
           label.removeClass( this.settings.validClass ).addClass( this.settings.errorClass );
         if(label.hasClass(this.settings.replaceableClass)){
           if(!$(element).attr('validationdefault')) $(element).attr('validationdefault', label.text());
-          if(message == this.defaultMessage(element, 'default', $(element).attr('validationdefault'))) 
+          if(message == this.defaultFormattedMessage(element, 'default', {}, $(element).attr('validationdefault'))) 
             label.removeClass( this.settings.validClass );
           label.html(message);
         }
@@ -676,7 +707,7 @@ $.extend($.validator, {
 				// create label
 				label = $("<" + this.settings.errorElement + "/>")
 					.attr({"for":  this.idOrName(element), generated: true})
-					.addClass(this.settings.errorClass)
+					.addClass(success_message ? this.settings.validClass : this.settings.errorClass)
 					.html(message || "");
 				if ( this.settings.wrapper ) {
 					// make sure the element is visible, even in IE
@@ -700,6 +731,13 @@ $.extend($.validator, {
 		errorsFor: function(element, replaceable_class) {
 			var name = this.idOrName(element);
     		return this.errors(replaceable_class).filter(function() {
+				return $(this).attr('for') == name;
+			});
+		},
+
+		validsFor: function(element, replaceable_class) {
+			var name = this.idOrName(element);
+    		return this.valids(replaceable_class).filter(function() {
 				return $(this).attr('for') == name;
 			});
 		},
@@ -998,7 +1036,7 @@ $.extend($.validator, {
 						var submitted = validator.formSubmitted;
 						validator.prepareElement(element);
 						validator.formSubmitted = submitted;
-						validator.successList.push({element: element, message: this.defaultMessage(element, 'success')});
+						validator.successList.push({element: element, message: this.defaultFormattedMessage(element, 'valid')});
 						validator.showErrors();
 					} else {
 						var errors = {};
