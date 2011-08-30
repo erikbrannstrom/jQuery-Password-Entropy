@@ -103,7 +103,7 @@
             // Run functions to modify password entropy
             for (var i in this.functions) {
               if(!this.functions[i]) continue;
-              entropy = this.functions[i](entropy, psw);
+              entropy = this.functions[i](entropy, psw, username);
             }
             return entropy;
           },
