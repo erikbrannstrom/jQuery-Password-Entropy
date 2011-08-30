@@ -51,25 +51,10 @@ Examples
     alert('Foobar123 has an entropy of '+entropy+' which is level '+classification);
     alert('Classification is '+tester.messageForClass(classification));
 
+It is possible to integrate the standalone tester into other jquery
+plugins. An example is available here: 
 
-Usage with [jquery.validation.js](https://github.com/jzaefferer/jquery-validation)
-
-
-    var tester = $.entropyTestFactory();
-    jQuery.validator.addMethod("entropy", function(value, element, params) {
-      return (tester.test(value) > params);
-      }, function(){ return "Please use a stronger password" });
-    $('form').validate({
-      onkeyup: function(element){
-        // Instant feedback.
-        this.element(element);
-      }
-    });
-
-Demo uses a modified fork of jquery validation to echo out additional
-strength classifications and do a pretty strength indicator:
-
-https://github.com/therabidbanana/jquery-validation
+https://github.com/therabidbanana/jQuery-Password-Entropy/tree/validation-demo
 
 
 License
