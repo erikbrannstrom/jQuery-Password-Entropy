@@ -18,6 +18,7 @@ to save space, since my password policy doesn't allow anything shorter anyway.
 
 Created by Erik Brännström.
 
+Refactored by David Haslem to allow integration with jquery.validation
 
 Options
 -------
@@ -26,17 +27,35 @@ Options
 - functions     : Array of functions that receive the current entropy and password.
                   Must return a value that will replace the current value.
                   Options are merged with defaults.
-- strings       : Array with six elements, setting the result string.
-- classes       : Array with six elements, setting the class of the display element
-                  based on the strength.
+- thresholds    : Array with thresholds counts, defining cutoffs for
+                  each classification
+- strings       : Array with same length as thresholds, setting the result string.
+- classes       : Array with same length as thresholds, setting the class of the 
+                  display element based on the strength.
 - blacklist     : Array containing blacklisted words that should not be used as
                   passwords. Options are merged with defaults.
 
-Example
+
+
+Examples
 -------
-`$('input[type=password]').passwordEntropy({
-    'display' : 'div.result'
-});`
+
+    $('input[type=password]').passwordEntropy({
+      'display' : 'div.result'
+    });
+
+    // Standalone usage
+    var tester = $.entropyTestFactory();
+    var entropy = tester.test('Foobar123');
+    var classification = tester.classify(entropy);
+    alert('Foobar123 has an entropy of '+entropy+' which is level '+classification);
+    alert('Classification is '+tester.messageForClass(classification));
+
+It is possible to integrate the standalone tester into other jquery
+plugins. An example is available here: 
+
+https://github.com/therabidbanana/jQuery-Password-Entropy/tree/validation-demo
+
 
 License
 -------
